@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://your-aiven-host:12345/defaultdb?useSSL=true&sslmode=require&serverTimezone=UTC
+    username: avnadmin
+    password: ${AIVEN_DB_PASSWORD:your-aiven-password} 
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  cors:
+    allowed-origin: http://localhost:5173
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key-here}
+  from-email: ${SENDGRID_FROM_EMAIL:your-verified-email@domain.com}

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: health-planner-frontend
+    env: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://bmihealthplanner-backend-1.onrender.com

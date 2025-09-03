@@ -1,0 +1,4 @@
+# Frontend Environment Variables for Production
+# Create a .env.production file with these values:
+
+VITE_API_URL=https://bmihealthplanner-backend-1.onrender.com
