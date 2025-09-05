@@ -9,6 +9,7 @@ const DailyMeals = () => {
     date: new Date().toISOString().split('T')[0] // Today's date
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Fetch meals on component mount
   useEffect(() => {
@@ -17,10 +18,14 @@ const DailyMeals = () => {
 
   const fetchMeals = async () => {
     try {
+      setError('');
+      console.log('Fetching meals from:', api.defaults.baseURL + '/api/meals');
       const response = await api.get('/api/meals');
+      console.log('Meals response:', response.data);
       setMeals(response.data);
     } catch (error) {
       console.error('Error fetching meals:', error);
+      setError(`Failed to fetch meals: ${error.response?.status || error.message}`);
     }
   };
 
@@ -41,12 +46,22 @@ const DailyMeals = () => {
     }
 
     setLoading(true);
+    setError('');
     try {
+      console.log('Adding meal to:', api.defaults.baseURL + '/api/meals');
+      console.log('Meal data:', {
+        mealName: formData.mealName.trim(),
+        calories: parseInt(formData.calories),
+        date: formData.date
+      });
+      
       const response = await api.post('/api/meals', {
         mealName: formData.mealName.trim(),
         calories: parseInt(formData.calories),
         date: formData.date
       });
+      
+      console.log('Add meal response:', response.data);
       
       // Add the new meal to the list
       setMeals(prev => [response.data, ...prev]);
@@ -61,7 +76,8 @@ const DailyMeals = () => {
       alert('Meal added successfully!');
     } catch (error) {
       console.error('Error adding meal:', error);
-      alert('Error adding meal. Please try again.');
+      setError(`Failed to add meal: ${error.response?.status || error.message}`);
+      alert(`Error adding meal: ${error.response?.status || error.message}`);
     } finally {
       setLoading(false);
     }
@@ -129,9 +145,24 @@ const DailyMeals = () => {
         </button>
       </form>
       
+      {/* Error Display */}
+      {error && (
+        <div className="error-message">
+          <p>⚠️ {error}</p>
+          <button onClick={fetchMeals} className="retry-btn">
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Meals List */}
       <div className="meals-list">
-        <h4>Recent Meals:</h4>
+        <div className="meals-header">
+          <h4>Recent Meals:</h4>
+          <button onClick={fetchMeals} className="refresh-btn" title="Refresh meals">
+            🔄
+          </button>
+        </div>
         {meals.length === 0 ? (
           <p className="no-meals">No meals added yet. Add your first meal above!</p>
         ) : (
