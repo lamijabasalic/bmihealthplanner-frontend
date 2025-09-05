@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
+import Sidebar from './components/Sidebar';
 
 export default function App(){
   const [email, setEmail] = useState('');
@@ -89,6 +90,7 @@ export default function App(){
 
   return (
     <div className="container">
+      <Sidebar />
       <div className="card">
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px'}}>
           <img src="/applogo.jpg" alt="Health Planner logo" style={{width: '50px', height: '50px', borderRadius: '50%', marginRight: '12px', objectFit: 'cover'}} />
