@@ -20,12 +20,24 @@ const DailyMeals = () => {
     try {
       setError('');
       console.log('Fetching meals from:', api.defaults.baseURL + '/api/meals');
-      const response = await api.get('/api/meals');
-      console.log('Meals response:', response.data);
       
-      // Sort meals by date (newest first) when fetching
-      const sortedMeals = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setMeals(sortedMeals);
+      // Try API first, fallback to localStorage
+      try {
+        const response = await api.get('/api/meals');
+        console.log('Meals response:', response.data);
+        
+        // Sort meals by date (newest first) when fetching
+        const sortedMeals = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setMeals(sortedMeals);
+        return;
+      } catch (apiError) {
+        console.log('API failed, using localStorage:', apiError.message);
+        
+        // Fallback to localStorage
+        const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
+        const sortedMeals = localMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setMeals(sortedMeals);
+      }
     } catch (error) {
       console.error('Error fetching meals:', error);
       console.error('Fetch error details:', {
@@ -35,12 +47,16 @@ const DailyMeals = () => {
         message: error.message
       });
       
+      // Fallback to localStorage
+      const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
+      setMeals(localMeals);
+      
       if (error.response?.status === 404) {
-        setError('Meals endpoint not found. Please check if backend is running.');
+        setError('Using local storage for meals (API endpoint not available)');
       } else if (error.response?.status === 0 || error.message.includes('Network Error')) {
-        setError('Network error. Please check your connection and try again.');
+        setError('Using local storage for meals (Network error)');
       } else {
-        setError(`Failed to fetch meals: ${error.response?.status || error.message}`);
+        setError(`Using local storage for meals (${error.response?.status || error.message})`);
       }
     }
   };
@@ -63,27 +79,45 @@ const DailyMeals = () => {
 
     setLoading(true);
     setError('');
+    
+    const newMeal = {
+        id: Date.now(), // Generate unique ID
+        mealName: formData.mealName.trim(),
+        calories: parseInt(formData.calories),
+        date: formData.date
+      };
+    
     try {
       console.log('Adding meal to:', api.defaults.baseURL + '/api/meals');
-      console.log('Meal data:', {
-        mealName: formData.mealName.trim(),
-        calories: parseInt(formData.calories),
-        date: formData.date
-      });
+      console.log('Meal data:', newMeal);
       
-      const response = await api.post('/api/meals', {
-        mealName: formData.mealName.trim(),
-        calories: parseInt(formData.calories),
-        date: formData.date
-      });
-      
-      console.log('Add meal response:', response.data);
-      
-      // Add the new meal to the list and sort by date (newest first)
-      setMeals(prev => {
-        const updatedMeals = [response.data, ...prev];
-        return updatedMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
-      });
+      try {
+        const response = await api.post('/api/meals', newMeal);
+        console.log('Add meal response:', response.data);
+        
+        // Add the new meal to the list and sort by date (newest first)
+        setMeals(prev => {
+          const updatedMeals = [response.data, ...prev];
+          return updatedMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
+        });
+        
+        alert('Meal added successfully to database!');
+      } catch (apiError) {
+        console.log('API failed, saving to localStorage:', apiError.message);
+        
+        // Fallback to localStorage
+        const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
+        localMeals.unshift(newMeal);
+        localStorage.setItem('meals', JSON.stringify(localMeals));
+        
+        // Update state
+        setMeals(prev => {
+          const updatedMeals = [newMeal, ...prev];
+          return updatedMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
+        });
+        
+        alert('Meal added successfully (saved locally)!');
+      }
       
       // Reset form
       setFormData({
@@ -91,8 +125,6 @@ const DailyMeals = () => {
         calories: '',
         date: new Date().toISOString().split('T')[0]
       });
-      
-      alert('Meal added successfully!');
       
       // Refresh the meals list to ensure data consistency
       setTimeout(() => {
