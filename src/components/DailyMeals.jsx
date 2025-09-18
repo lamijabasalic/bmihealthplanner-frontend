@@ -22,7 +22,10 @@ const DailyMeals = () => {
       console.log('Fetching meals from:', api.defaults.baseURL + '/api/meals');
       const response = await api.get('/api/meals');
       console.log('Meals response:', response.data);
-      setMeals(response.data);
+      
+      // Sort meals by date (newest first) when fetching
+      const sortedMeals = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setMeals(sortedMeals);
     } catch (error) {
       console.error('Error fetching meals:', error);
       setError(`Failed to fetch meals: ${error.response?.status || error.message}`);
@@ -63,8 +66,11 @@ const DailyMeals = () => {
       
       console.log('Add meal response:', response.data);
       
-      // Add the new meal to the list
-      setMeals(prev => [response.data, ...prev]);
+      // Add the new meal to the list and sort by date (newest first)
+      setMeals(prev => {
+        const updatedMeals = [response.data, ...prev];
+        return updatedMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
+      });
       
       // Reset form
       setFormData({
@@ -74,6 +80,11 @@ const DailyMeals = () => {
       });
       
       alert('Meal added successfully!');
+      
+      // Refresh the meals list to ensure data consistency
+      setTimeout(() => {
+        fetchMeals();
+      }, 500);
     } catch (error) {
       console.error('Error adding meal:', error);
       setError(`Failed to add meal: ${error.response?.status || error.message}`);
@@ -166,15 +177,23 @@ const DailyMeals = () => {
         {meals.length === 0 ? (
           <p className="no-meals">No meals added yet. Add your first meal above!</p>
         ) : (
-          <ul className="meals-ul">
-            {meals.map((meal) => (
-              <li key={meal.id} className="meal-item">
-                <span className="meal-name">{meal.mealName}</span>
-                <span className="meal-calories">{meal.calories} kcal</span>
-                <span className="meal-date">{formatDate(meal.date)}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="meals-container">
+            <div className="meals-summary">
+              <p>Total meals: {meals.length}</p>
+              <p>Total calories: {meals.reduce((sum, meal) => sum + (meal.calories || 0), 0)} kcal</p>
+            </div>
+            <ul className="meals-ul">
+              {meals.map((meal, index) => (
+                <li key={meal.id || index} className="meal-item">
+                  <div className="meal-info">
+                    <span className="meal-name">{meal.mealName}</span>
+                    <span className="meal-calories">{meal.calories} kcal</span>
+                  </div>
+                  <span className="meal-date">{formatDate(meal.date)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </div>
