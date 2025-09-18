@@ -211,7 +211,7 @@ export default function App(){
         </div>
       )}
 
-      <div className="footer">Swagger API: <a href="id http://localhost:8080/swagger" target="_blank" rel="noreferrer">http://localhost:8080/swagger</a></div>
+      <div className="footer">Swagger API: <a href="http://localhost:8080/swagger" target="_blank" rel="noreferrer">http://localhost:8080/swagger</a></div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || 'https://bmihealthplanner-backend-1.onrender.com';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 export const api = axios.create({ baseURL });
