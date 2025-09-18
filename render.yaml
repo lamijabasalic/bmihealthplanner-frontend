@@ -7,4 +7,4 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        value: https://bmihealthplanner-backend-1.onrender.com
+        value: https://bmihealthplanner-backend.onrender.com
