@@ -28,7 +28,20 @@ const DailyMeals = () => {
       setMeals(sortedMeals);
     } catch (error) {
       console.error('Error fetching meals:', error);
-      setError(`Failed to fetch meals: ${error.response?.status || error.message}`);
+      console.error('Fetch error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      if (error.response?.status === 404) {
+        setError('Meals endpoint not found. Please check if backend is running.');
+      } else if (error.response?.status === 0 || error.message.includes('Network Error')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(`Failed to fetch meals: ${error.response?.status || error.message}`);
+      }
     }
   };
 
@@ -87,7 +100,20 @@ const DailyMeals = () => {
       }, 500);
     } catch (error) {
       console.error('Error adding meal:', error);
-      setError(`Failed to add meal: ${error.response?.status || error.message}`);
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      if (error.response?.status === 404) {
+        setError('Meal endpoint not found. Please check if backend is running.');
+      } else if (error.response?.status === 0 || error.message.includes('Network Error')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(`Failed to add meal: ${error.response?.status || error.message}`);
+      }
       alert(`Error adding meal: ${error.response?.status || error.message}`);
     } finally {
       setLoading(false);
