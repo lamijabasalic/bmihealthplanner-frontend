@@ -1,0 +1,60 @@
+FRONTEND PULL REQUEST - COPY THIS TEXT:
+
+Title: Professor Demo: User-Specific Meal Tracking with Email Authentication
+
+Description:
+# 🍽️ User-Specific Meal Tracking Implementation
+
+## Overview
+This pull request implements a comprehensive user-specific meal tracking system as requested by the professor. The application now prompts users for their email address and tracks meals per user per day.
+
+## Key Features Implemented
+
+### 1. Email Authentication Modal
+- **Popup window** appears every time the application is refreshed (as required)
+- **Email validation** ensures proper email format
+- **Persistent storage** using localStorage for debugging and backup
+- **User-friendly interface** with modern modal design
+
+### 2. User-Specific Meal Tracking
+- **Meal association** with user email addresses
+- **Daily filtering** - shows only meals for current user and current date
+- **Real-time updates** - meals appear immediately after submission
+- **Persistent display** - meals remain visible and don't disappear
+
+### 3. Enhanced User Experience
+- **Debug tools** for testing and demonstration
+- **Visual feedback** showing current user email
+- **Error handling** with user-friendly messages
+- **Responsive design** that works on all devices
+
+## Technical Implementation
+
+### Components Modified:
+- `App.jsx` - Added email modal and userEmail state management
+- `DailyMeals.jsx` - Implemented user-specific meal filtering and persistence
+- `Sidebar.jsx` - Added userEmail prop passing
+- `styles.css` - Added modal and enhanced UI styling
+
+### Key Features:
+- ✅ Email popup on every refresh (professor requirement)
+- ✅ User-specific meal tracking
+- ✅ Database integration with userEmail field
+- ✅ Meals display as list one below another
+- ✅ localStorage backup for persistence
+- ✅ Debug tools for testing
+
+## Testing Features
+- Test with different email addresses
+- Clear all meals functionality
+- Backend connection testing
+- Reset user email functionality
+
+## Database Integration
+- Frontend sends userEmail to backend API
+- Meals are stored with userEmail in database
+- User-specific meal retrieval implemented
+
+This implementation fully satisfies the professor's requirements for user-specific meal tracking with email-based identification.
+
+LINK: https://github.com/lamijabasalic/bmihealthplanner-frontend/pull/new/professor-demo-features
