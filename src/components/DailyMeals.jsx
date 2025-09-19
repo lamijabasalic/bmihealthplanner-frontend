@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 
 const DailyMeals = ({ userEmail }) => {
+  console.log('=== DAILYMEALS COMPONENT MOUNT ===');
+  console.log('userEmail prop received:', userEmail);
+  console.log('userEmail type:', typeof userEmail);
+  console.log('userEmail is null?', userEmail === null);
+  console.log('userEmail is undefined?', userEmail === undefined);
+  console.log('userEmail is empty?', userEmail === '');
+  
   const [meals, setMeals] = useState([]);
   const [formData, setFormData] = useState({
     mealName: '',
@@ -13,38 +20,49 @@ const DailyMeals = ({ userEmail }) => {
 
   // Fetch meals on component mount and when userEmail changes
   useEffect(() => {
+    console.log('=== DAILYMEALS USEEFFECT ===');
+    console.log('userEmail prop:', userEmail);
+    console.log('userEmail type:', typeof userEmail);
+    console.log('userEmail is empty?', !userEmail);
+    
     if (userEmail) {
+      console.log('Fetching meals for userEmail:', userEmail);
       fetchMeals();
+    } else {
+      console.log('No userEmail, but keeping existing meals visible');
+      // Don't clear meals if userEmail is empty - keep them visible
     }
   }, [userEmail]);
+
+  // Keep meals visible even when userEmail changes
+  useEffect(() => {
+    console.log('=== MEALS STATE CHANGE ===');
+    console.log('Meals count:', meals.length);
+    console.log('Current meals:', meals);
+  }, [meals]);
 
   const fetchMeals = async () => {
     try {
       setError('');
       console.log('Fetching meals from:', api.defaults.baseURL + '/api/meals');
       
-      // Try API first, fallback to localStorage
-      try {
-        const response = await api.get('/api/meals');
-        console.log('Meals response:', response.data);
-        
-        // Sort meals by date (newest first) when fetching
-        const sortedMeals = response.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setMeals(sortedMeals);
-        return;
-      } catch (apiError) {
-        console.log('API failed, using localStorage:', apiError.message);
-        
-        // Fallback to localStorage
-        const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
-        // Filter meals by user email and today's date
-        const today = new Date().toISOString().split('T')[0];
-        const filteredMeals = localMeals.filter(meal => 
-          meal.userEmail === userEmail && meal.date === today
-        );
-        const sortedMeals = filteredMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setMeals(sortedMeals);
-      }
+      const response = await api.get('/api/meals');
+      console.log('Meals response:', response.data);
+      console.log('First meal userEmail:', response.data[0]?.userEmail);
+      
+      // Filter meals by user email and today's date, then sort
+      const today = new Date().toISOString().split('T')[0];
+      const filteredMeals = response.data.filter(meal => 
+        meal.userEmail === userEmail && meal.date === today
+      );
+      console.log('Filtered meals from API:', filteredMeals);
+      const sortedMeals = filteredMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      // Save to localStorage for persistence
+      localStorage.setItem(`meals_${userEmail}`, JSON.stringify(sortedMeals));
+      console.log('Meals saved to localStorage for user:', userEmail);
+      
+      setMeals(sortedMeals);
     } catch (error) {
       console.error('Error fetching meals:', error);
       console.error('Fetch error details:', {
@@ -54,21 +72,17 @@ const DailyMeals = ({ userEmail }) => {
         message: error.message
       });
       
-      // Fallback to localStorage
-      const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
-      // Filter meals by user email and today's date
-      const today = new Date().toISOString().split('T')[0];
-      const filteredMeals = localMeals.filter(meal => 
-        meal.userEmail === userEmail && meal.date === today
-      );
-      setMeals(filteredMeals);
+      // Try to load from localStorage as fallback
+      const localMeals = JSON.parse(localStorage.getItem(`meals_${userEmail}`) || '[]');
+      console.log('Loading meals from localStorage:', localMeals);
+      setMeals(localMeals);
       
       if (error.response?.status === 404) {
-        setError('Using local storage for meals (API endpoint not available)');
+        setError('Meals endpoint not found. Using cached meals.');
       } else if (error.response?.status === 0 || error.message.includes('Network Error')) {
-        setError('Using local storage for meals (Network error)');
+        setError('Network error. Using cached meals.');
       } else {
-        setError(`Using local storage for meals (${error.response?.status || error.message})`);
+        setError(`Failed to fetch meals: ${error.response?.status || error.message}. Using cached meals.`);
       }
     }
   };
@@ -84,8 +98,24 @@ const DailyMeals = ({ userEmail }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!userEmail) {
-      alert('Please enter your email first');
+    console.log('=== MEAL SUBMISSION DEBUG ===');
+    console.log('userEmail prop:', userEmail);
+    console.log('userEmail type:', typeof userEmail);
+    console.log('userEmail is null?', userEmail === null);
+    console.log('userEmail is undefined?', userEmail === undefined);
+    console.log('userEmail is empty string?', userEmail === '');
+    
+    // CRITICAL: Try to get userEmail from localStorage as backup
+    const storedEmail = localStorage.getItem('debugUserEmail');
+    console.log('Stored email from localStorage:', storedEmail);
+    
+    // Use storedEmail if userEmail is empty
+    const finalUserEmail = userEmail || storedEmail;
+    console.log('Final userEmail to use:', finalUserEmail);
+    
+    if (!finalUserEmail || finalUserEmail === '' || finalUserEmail === null || finalUserEmail === undefined) {
+      alert('CRITICAL ERROR: No userEmail! Please refresh and enter email again!');
+      console.error('CRITICAL: userEmail is missing!');
       return;
     }
     
@@ -102,40 +132,52 @@ const DailyMeals = ({ userEmail }) => {
         mealName: formData.mealName.trim(),
         calories: parseInt(formData.calories),
         date: formData.date,
-        userEmail: userEmail
+        userEmail: finalUserEmail
       };
+    
+    console.log('newMeal object:', newMeal);
+    console.log('newMeal.userEmail:', newMeal.userEmail);
+    console.log('CRITICAL CHECK - finalUserEmail before sending:', finalUserEmail);
+    
+    // CRITICAL: Check if finalUserEmail is actually a string
+    if (typeof finalUserEmail !== 'string' || finalUserEmail === '') {
+      alert('CRITICAL ERROR: finalUserEmail is not a valid string!');
+      console.error('CRITICAL: finalUserEmail is not a string:', typeof finalUserEmail, finalUserEmail);
+      return;
+    }
     
     try {
       console.log('Adding meal to:', api.defaults.baseURL + '/api/meals');
       console.log('Meal data:', newMeal);
       
-      try {
-        const response = await api.post('/api/meals', newMeal);
-        console.log('Add meal response:', response.data);
+      console.log('Sending meal to backend with userEmail:', newMeal.userEmail);
+      console.log('CRITICAL: About to send to backend:', JSON.stringify(newMeal));
+      
+      const response = await api.post('/api/meals', newMeal);
+      console.log('Add meal response:', response.data);
+      console.log('Response includes userEmail:', response.data.userEmail);
+      console.log('CRITICAL: Backend saved userEmail as:', response.data.userEmail);
+      
+      // Add the new meal to the list and sort by date (newest first)
+      setMeals(prev => {
+        console.log('=== ADDING MEAL TO STATE ===');
+        console.log('Previous meals:', prev);
+        console.log('New meal to add:', response.data);
         
-        // Add the new meal to the list and sort by date (newest first)
-        setMeals(prev => {
-          const updatedMeals = [response.data, ...prev];
-          return updatedMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
-        });
+        const updatedMeals = [response.data, ...prev];
+        console.log('Updated meals (before sort):', updatedMeals);
         
-        alert('Meal added successfully to database!');
-      } catch (apiError) {
-        console.log('API failed, saving to localStorage:', apiError.message);
+        const sortedMeals = updatedMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
+        console.log('Sorted meals:', sortedMeals);
         
-        // Fallback to localStorage
-        const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
-        localMeals.unshift(newMeal);
-        localStorage.setItem('meals', JSON.stringify(localMeals));
+        // Save updated meals to localStorage
+        localStorage.setItem(`meals_${userEmail}`, JSON.stringify(sortedMeals));
+        console.log('Updated meals saved to localStorage');
         
-        // Update state
-        setMeals(prev => {
-          const updatedMeals = [newMeal, ...prev];
-          return updatedMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
-        });
-        
-        alert('Meal added successfully (saved locally)!');
-      }
+        return sortedMeals;
+      });
+      
+      alert('Meal added successfully to database!');
       
       // Reset form
       setFormData({
@@ -144,10 +186,10 @@ const DailyMeals = ({ userEmail }) => {
         date: new Date().toISOString().split('T')[0]
       });
       
-      // Refresh the meals list to ensure data consistency
-      setTimeout(() => {
-        fetchMeals();
-      }, 500);
+      // DON'T refresh meals - they will disappear!
+      // setTimeout(() => {
+      //   fetchMeals();
+      // }, 500);
     } catch (error) {
       console.error('Error adding meal:', error);
       console.error('Error details:', {
@@ -246,9 +288,47 @@ const DailyMeals = ({ userEmail }) => {
       <div className="meals-list">
         <div className="meals-header">
           <h4>Recent Meals:</h4>
-          <button onClick={fetchMeals} className="refresh-btn" title="Refresh meals">
-            🔄
-          </button>
+          <div className="header-buttons">
+            <button onClick={fetchMeals} className="refresh-btn" title="Refresh meals">
+              🔄
+            </button>
+            <button onClick={() => {
+              const testEmail = prompt('Enter test email:', 'test@example.com');
+              if (testEmail) {
+                localStorage.setItem('userEmail', testEmail);
+                window.location.reload();
+              }
+            }} className="test-btn" title="Test with different email">
+              👤
+            </button>
+            <button onClick={() => {
+              if (confirm('Clear all meals from localStorage?')) {
+                localStorage.removeItem('meals');
+                setMeals([]);
+                alert('All meals cleared!');
+              }
+            }} className="clear-btn" title="Clear all meals">
+              🗑️
+            </button>
+            <button onClick={async () => {
+              try {
+                const response = await api.get('/api/meals');
+                console.log('Backend meals test:', response.data);
+                alert(`Backend has ${response.data.length} meals. Check console for details.`);
+              } catch (error) {
+                console.error('Backend test failed:', error);
+                alert('Backend test failed. Check console for details.');
+              }
+            }} className="backend-btn" title="Test backend connection">
+              🔗
+            </button>
+            <button onClick={() => {
+              localStorage.removeItem('userEmail');
+              window.location.reload();
+            }} className="reset-btn" title="Reset user email">
+              🔄
+            </button>
+          </div>
         </div>
         {meals.length === 0 ? (
           <p className="no-meals">
@@ -259,17 +339,25 @@ const DailyMeals = ({ userEmail }) => {
             <div className="meals-summary">
               <p>Total meals: {meals.length}</p>
               <p>Total calories: {meals.reduce((sum, meal) => sum + (meal.calories || 0), 0)} kcal</p>
+              <p className="user-info">👤 User: {userEmail}</p>
+              <p className="date-info">📅 Date: {new Date().toLocaleDateString()}</p>
             </div>
             <ul className="meals-ul">
-              {meals.map((meal, index) => (
-                <li key={meal.id || index} className="meal-item">
-                  <div className="meal-info">
-                    <span className="meal-name">{meal.mealName}</span>
-                    <span className="meal-calories">{meal.calories} kcal</span>
-                  </div>
-                  <span className="meal-date">{formatDate(meal.date)}</span>
-                </li>
-              ))}
+              {meals.map((meal, index) => {
+                console.log(`Rendering meal ${index}:`, meal);
+                return (
+                  <li key={meal.id || index} className="meal-item">
+                    <div className="meal-info">
+                      <span className="meal-name">{meal.mealName}</span>
+                      <span className="meal-calories">{meal.calories} kcal</span>
+                    </div>
+                    <div className="meal-meta">
+                      <span className="meal-date">{formatDate(meal.date)}</span>
+                      <span className="meal-user">👤 {meal.userEmail}</span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

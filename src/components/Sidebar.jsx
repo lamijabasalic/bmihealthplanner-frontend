@@ -4,6 +4,14 @@ import DailyMeals from './DailyMeals';
 const Sidebar = ({ userEmail }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  console.log('=== SIDEBAR DEBUG ===');
+  console.log('Sidebar received userEmail:', userEmail);
+  console.log('userEmail type:', typeof userEmail);
+  console.log('userEmail is null?', userEmail === null);
+  console.log('userEmail is undefined?', userEmail === undefined);
+  console.log('userEmail is empty?', userEmail === '');
+  console.log('userEmail length:', userEmail ? userEmail.length : 'N/A');
+
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };

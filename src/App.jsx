@@ -12,15 +12,30 @@ export default function App(){
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
-  // Check if user email is stored, if not show modal
+  // Always show modal on app load (professor requirement)
   useEffect(() => {
-    const storedEmail = localStorage.getItem('userEmail');
+    console.log('=== APP MOUNT DEBUG ===');
+    console.log('App mounted, showing modal');
+    
+    // Check if there's a stored email (for debugging purposes)
+    const storedEmail = localStorage.getItem('debugUserEmail');
     if (storedEmail) {
+      console.log('Found stored email:', storedEmail);
       setUserEmail(storedEmail);
+      setShowEmailModal(false);
     } else {
       setShowEmailModal(true);
     }
   }, []);
+
+  // Debug userEmail changes
+  useEffect(() => {
+    console.log('=== USEREMAIL STATE CHANGE ===');
+    console.log('userEmail changed to:', userEmail);
+    console.log('userEmail type:', typeof userEmail);
+    console.log('userEmail length:', userEmail ? userEmail.length : 'N/A');
+    console.log('userEmail is valid email?', userEmail && userEmail.includes('@'));
+  }, [userEmail]);
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
@@ -28,9 +43,24 @@ export default function App(){
       alert('Please enter a valid email address');
       return;
     }
+    console.log('=== EMAIL SUBMISSION DEBUG ===');
+    console.log('Email entered:', email);
+    console.log('Setting userEmail to:', email);
+    
+    // Set userEmail and save to localStorage for persistence
     setUserEmail(email);
-    localStorage.setItem('userEmail', email);
+    localStorage.setItem('debugUserEmail', email);
     setShowEmailModal(false);
+    
+    console.log('userEmail state set to:', email);
+    console.log('Email saved to localStorage');
+    console.log('Modal closed, userEmail should persist');
+  };
+
+  const resetUserEmail = () => {
+    setUserEmail('');
+    localStorage.removeItem('debugUserEmail');
+    setShowEmailModal(true);
   };
 
   const submit = async (e) => {
@@ -137,6 +167,40 @@ export default function App(){
       )}
       
       <Sidebar userEmail={userEmail} />
+      
+      {/* CRITICAL DEBUG: Check what we're passing to Sidebar */}
+      <div style={{background: 'red', color: 'white', padding: '5px', margin: '5px', fontSize: '10px'}}>
+        <strong>CRITICAL DEBUG:</strong><br/>
+        Passing to Sidebar: {userEmail || 'EMPTY/NULL'}<br/>
+        Type: {typeof userEmail}<br/>
+        Length: {userEmail ? userEmail.length : 'N/A'}
+      </div>
+      
+      {/* User Email Info */}
+      {userEmail && (
+        <div className="user-email-info">
+          <span>👤 Logged in as: {userEmail}</span>
+          <button onClick={resetUserEmail} className="reset-email-btn">
+            🔄 Change Email
+          </button>
+        </div>
+      )}
+      
+      {/* Debug Info */}
+      <div style={{background: 'yellow', padding: '10px', margin: '10px', fontSize: '12px'}}>
+        <strong>DEBUG INFO:</strong><br/>
+        userEmail: {userEmail || 'EMPTY'}<br/>
+        showEmailModal: {showEmailModal ? 'true' : 'false'}<br/>
+        email field: {email || 'EMPTY'}<br/>
+        <button onClick={() => {
+          localStorage.removeItem('debugUserEmail');
+          setUserEmail('');
+          setShowEmailModal(true);
+        }} style={{marginTop: '5px', padding: '5px'}}>
+          🗑️ Clear Debug Email
+        </button>
+      </div>
+      
       <div className="card">
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px'}}>
           <img src="/applogo.jpg" alt="Health Planner logo" style={{width: '50px', height: '50px', borderRadius: '50%', marginRight: '12px', objectFit: 'cover'}} />
