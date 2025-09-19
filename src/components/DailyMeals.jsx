@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 
-const DailyMeals = () => {
+const DailyMeals = ({ userEmail }) => {
   const [meals, setMeals] = useState([]);
   const [formData, setFormData] = useState({
     mealName: '',
@@ -11,10 +11,12 @@ const DailyMeals = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch meals on component mount
+  // Fetch meals on component mount and when userEmail changes
   useEffect(() => {
-    fetchMeals();
-  }, []);
+    if (userEmail) {
+      fetchMeals();
+    }
+  }, [userEmail]);
 
   const fetchMeals = async () => {
     try {
@@ -35,7 +37,12 @@ const DailyMeals = () => {
         
         // Fallback to localStorage
         const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
-        const sortedMeals = localMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Filter meals by user email and today's date
+        const today = new Date().toISOString().split('T')[0];
+        const filteredMeals = localMeals.filter(meal => 
+          meal.userEmail === userEmail && meal.date === today
+        );
+        const sortedMeals = filteredMeals.sort((a, b) => new Date(b.date) - new Date(a.date));
         setMeals(sortedMeals);
       }
     } catch (error) {
@@ -49,7 +56,12 @@ const DailyMeals = () => {
       
       // Fallback to localStorage
       const localMeals = JSON.parse(localStorage.getItem('meals') || '[]');
-      setMeals(localMeals);
+      // Filter meals by user email and today's date
+      const today = new Date().toISOString().split('T')[0];
+      const filteredMeals = localMeals.filter(meal => 
+        meal.userEmail === userEmail && meal.date === today
+      );
+      setMeals(filteredMeals);
       
       if (error.response?.status === 404) {
         setError('Using local storage for meals (API endpoint not available)');
@@ -72,6 +84,11 @@ const DailyMeals = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!userEmail) {
+      alert('Please enter your email first');
+      return;
+    }
+    
     if (!formData.mealName.trim() || !formData.calories) {
       alert('Please fill in all fields');
       return;
@@ -84,7 +101,8 @@ const DailyMeals = () => {
         id: Date.now(), // Generate unique ID
         mealName: formData.mealName.trim(),
         calories: parseInt(formData.calories),
-        date: formData.date
+        date: formData.date,
+        userEmail: userEmail
       };
     
     try {
@@ -233,7 +251,9 @@ const DailyMeals = () => {
           </button>
         </div>
         {meals.length === 0 ? (
-          <p className="no-meals">No meals added yet. Add your first meal above!</p>
+          <p className="no-meals">
+            {userEmail ? `No meals added yet for ${userEmail} today. Add your first meal above!` : 'Please enter your email to track meals.'}
+          </p>
         ) : (
           <div className="meals-container">
             <div className="meals-summary">

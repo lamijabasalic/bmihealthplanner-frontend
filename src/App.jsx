@@ -9,6 +9,29 @@ export default function App(){
   const [res, setRes] = useState(null);
   const [activity, setActivity] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+
+  // Check if user email is stored, if not show modal
+  useEffect(() => {
+    const storedEmail = localStorage.getItem('userEmail');
+    if (storedEmail) {
+      setUserEmail(storedEmail);
+    } else {
+      setShowEmailModal(true);
+    }
+  }, []);
+
+  const handleEmailSubmit = (e) => {
+    e.preventDefault();
+    if (!email.includes('@')) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    setUserEmail(email);
+    localStorage.setItem('userEmail', email);
+    setShowEmailModal(false);
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -90,7 +113,30 @@ export default function App(){
 
   return (
     <div className="container">
-      <Sidebar />
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>🍽️ Welcome to Health Planner!</h2>
+            <p>Please enter your email to track your daily meals:</p>
+            <form onSubmit={handleEmailSubmit}>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="email-input"
+              />
+              <button type="submit" className="email-submit-btn">
+                Continue
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      <Sidebar userEmail={userEmail} />
       <div className="card">
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px'}}>
           <img src="/applogo.jpg" alt="Health Planner logo" style={{width: '50px', height: '50px', borderRadius: '50%', marginRight: '12px', objectFit: 'cover'}} />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DailyMeals from './DailyMeals';
 
-const Sidebar = () => {
+const Sidebar = ({ userEmail }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -53,7 +53,7 @@ const Sidebar = () => {
           </button>
         </div>
         
-        <DailyMeals />
+        <DailyMeals userEmail={userEmail} />
       </div>
     </>
   );
